@@ -126,4 +126,15 @@
   <metadata name="bwCopyFiles.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>301, 17</value>
   </metadata>
+  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>443, 17</value>
+  </metadata>
+  <data name="lblSSDTLog.Text" xml:space="preserve">
+    <value>Instructions:
+1. Select an option from the menu above, based on what 
+you need to troubleshoot
+2. Follow the instructions for each specific capture
+3. Once ready, select the 'Zip Everything' Option
+4. Upload the zip file to your case's sharing space</value>
+  </data>
 </root>

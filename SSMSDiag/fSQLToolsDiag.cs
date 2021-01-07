@@ -4,13 +4,32 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
+using System.Security.Principal;
+using System.Threading;
 
-namespace SSMSDiag
+namespace SQLToolsDiag
 {
     public partial class fSQLToolsDiag : Form
     {
-        string SQLToolsDiagDir = @"c:\SQLToolsDiag";
-        string TempFolder = Environment.CurrentDirectory = Environment.GetEnvironmentVariable("temp");
+        static string baseDirectory = @"c:\SQLToolsDiag";
+        readonly string SQLToolsDiagDir = baseDirectory + @"\SQLToolsDiag";
+        readonly string SQLToolsDiagZip = baseDirectory + @"\SQLToolsDiag.zip";
+        readonly string TempFolder = Environment.CurrentDirectory = Environment.GetEnvironmentVariable("temp");
+        private bool SSDTCapture = false;
+
+        public static bool IsAdmin()
+        {
+            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))
+                      .IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        //public static bool CanRunLogman()
+        //{
+        //    return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))
+        //              .IsInRole(WindowsBuiltInRole);
+        //}
+
         public fSQLToolsDiag()
         {
             InitializeComponent();
@@ -19,13 +38,15 @@ namespace SSMSDiag
         public void stopMarquee(string msg)
         {
             tsslStatus.Text = msg; // "SSMS Started";
-            tspbProcess.MarqueeAnimationSpeed = 0;
+            tspbProcess.Value = 100;
         }
         #region SSMS
-        private void btnStartSSSMSLogging_Click(object sender, EventArgs e)
+
+
+        private void StartSSSMSLogging()
         {
             tsslStatus.Text = "Starting SSMS";
-            tspbProcess.MarqueeAnimationSpeed = 30;
+            
             bwStartSSMS.RunWorkerAsync();
 
         }
@@ -85,16 +106,23 @@ namespace SSMSDiag
 
         private void btnCollectSSMSInstallLogs_Click(object sender, EventArgs e)
         {
+            CollectSSMSInstallLogs();
+        }
+
+        private void CollectSSMSInstallLogs()
+        {
             tsslStatus.Text = "Copying SSMS Setup files";
-            tspbProcess.MarqueeAnimationSpeed = 30;
+            //tspbProcess.MarqueeAnimationSpeed = 30;
             bwCopyFiles.RunWorkerAsync("SSMS");
         }
+
 
         #endregion
 
 
         private void fSQLToolsDiag_Shown(object sender, EventArgs e)
         {
+            this.Text = this.Text + " - Version " + Application.ProductVersion;
             //checks if the folder exists, else it creates it
             bool createDir = true;
             try
@@ -117,7 +145,40 @@ namespace SSMSDiag
             }
             catch (Exception ex)
             {
+                MessageBox.Show("Unexpected error occurred while creating the collection folder. Check windows log for more details.", "SQLToolsDiag", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                WriteEventLog(ex.Message, EventLogEntryType.Error);
             }
+        }
+
+        private void WriteEventLog(string Message, EventLogEntryType type) {
+            string destinationLog = "Application";
+            /*
+             If this fails with a message that says that it can't access all the logs and mentions the security log, 
+             Run Visual Studio as Admin.
+             */
+
+            if (!System.Diagnostics.EventLog.SourceExists(Application.ProductName))
+            {
+                System.Diagnostics.EventLog.CreateEventSource(Application.ProductName, destinationLog);
+            }
+            EventLog el = new EventLog(destinationLog);
+            el.Source = Application.ProductName;
+            el.WriteEntry(Message,type);
+        }
+
+        private void resetProgressBar() {
+            tspbProcess.Value = 0;
+        }
+
+     /*   private void //DisplaySSDTLog(bool visible) {
+            txSSDTLogMan.Visible = visible;
+            btnCopy.Visible = visible;
+        }*/
+
+        private void LabelSetupFiles() {
+            lblSSDTLog.Text = Environment.NewLine + "1. If done, click on 'Zip Everything' and upload the " +
+                                    Environment.NewLine + "zip file to the case's sharing space";
+            //DisplaySSDTLog(false);
         }
 
         #region Copy Setup Files
@@ -181,7 +242,6 @@ namespace SSMSDiag
             
         }
 
-
         private void bwCopyFiles_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             stopMarquee("Files copied!");
@@ -217,17 +277,58 @@ namespace SSMSDiag
 
         private void btnStartSSDTLogging_Click(object sender, EventArgs e)
         {
-            string createDacFxTrace = "/C logman.exe create trace -n DacFxDebug -p \"Microsoft-SQLServerDataTools\" 0x800 -o \"" + SQLToolsDiagDir + "\\DacFxDebug.etl\" -ets";
-            string createSSDTTrace = "/C logman.exe create trace -n SSDTDebug  -p \"Microsoft-SQLServerDataToolsVS\" 0x800 -o \"" + SQLToolsDiagDir + "\\SSDTDebug.etl\" -ets";
-            textBox1.Text = createDacFxTrace;
-            Process.Start("cmd.exe", createDacFxTrace);
-            Process.Start("cmd.exe", createSSDTTrace);
+            StartSSDTLogging();
+        }
+        private void StartSSDTLogging()
+        {
+            try
+            {
+                SSDTCapture = true;
+
+                string createDacFxTrace = "logman.exe create trace -n DacFxDebug -p \"Microsoft-SQLServerDataTools\" 0x800 -o \"" + SQLToolsDiagDir + "\\DacFxDebug.etl\" -ets";
+                string createSSDTTrace  = "logman.exe create trace -n SSDTDebug  -p \"Microsoft-SQLServerDataToolsVS\" 0x800 -o \"" + SQLToolsDiagDir + "\\SSDTDebug.etl\" -ets";
+                txSSDTLogMan.Text = createDacFxTrace;
+                txSSDTLogMan.Text += Environment.NewLine;
+                txSSDTLogMan.Text += createSSDTTrace;
+                txSSDTLogMan.Text += Environment.NewLine;
+                //Thread.Sleep(250);
+                // Process p1 = Process.Start("logman.exe", createDacFxTrace);
+                //int pExit = p1.ExitCode;
+                //Thread.Sleep(250);               
+                //Process p2 = Process.Start("logman.exe", createSSDTTrace);
+                //int pExit2 = p2.ExitCode;
+            }
+            catch (Exception ex) { 
+            
+            }
+            
+        }
+
+        public bool IsSSDTTraceTaken()
+        {
+             return (Directory.EnumerateFileSystemEntries(SQLToolsDiagDir, "*.etl") != null);
+        }
+
+        private void StopSSDTLogging()
+        {
+            SSDTCapture = false;
+
+            txSSDTLogMan.Text = "Logman.exe stop DacFxDebug -ets";
+            txSSDTLogMan.Text += Environment.NewLine;
+            txSSDTLogMan.Text += "Logman.exe stop SSDTDebug -ets";
+            txSSDTLogMan.Text += Environment.NewLine;
+
+            //Process.Start("cmd.exe", "/c Logman.exe stop DacFxDebug -ets");
+            //Process.Start("cmd.exe", "/c Logman.exe stop SSDTDebug -ets");
+            if (!IsSSDTTraceTaken()) {
+                MessageBox.Show("The SSDT trace was not collected, please retart your machine and try again", "SQLToolsDiag", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
         }
 
         private void btnStopSSDTLogging_Click(object sender, EventArgs e)
         {
-            Process.Start("cmd.exe", "/c Logman.exe stop DacFxDebug -ets");
-            Process.Start("cmd.exe", "/c Logman.exe stop SSDTDebug -ets");
+            StopSSDTLogging();
         }
 
         #endregion
@@ -246,9 +347,157 @@ namespace SSMSDiag
 
         #endregion
 
-        private void fSQLToolsDiag_Load(object sender, EventArgs e)
+        private void btnZipCapture_Click(object sender, EventArgs e)
+        {
+            ZipCapture();
+
+        }
+
+        private void ZipCapture()
+        {
+            if (!File.Exists(SQLToolsDiagZip))
+            {
+                ZipFile.CreateFromDirectory(SQLToolsDiagDir, SQLToolsDiagZip);
+            }
+            else
+            {
+                if (MessageBox.Show("There is already a zipped file generated, do you want to overwrite it?", "SQLToolsDiag", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    File.Delete(SQLToolsDiagZip);
+                    ZipFile.CreateFromDirectory(SQLToolsDiagDir, SQLToolsDiagZip);
+                }
+            }
+            Process.Start("Explorer.exe", baseDirectory);
+
+        }
+
+        private void startSSMSWithLoggingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            //DisplaySSDTLog(false);
+            StartSSSMSLogging();
+            lblSSDTLog.Text = "1. Wait for SSMS to start";
+            lblSSDTLog.Text += Environment.NewLine + "2. Reproduce your issue";
+            lblSSDTLog.Text += Environment.NewLine + "3. Close SSMS";
+            lblSSDTLog.Text += Environment.NewLine + "4. If done, click on 'Zip Everything' and upload the " + 
+                                Environment.NewLine + "zip file to the case's sharing space";
+        }
+
+        private void collectSSMSInstallLogsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            CollectSSMSInstallLogs();
+        }
+
+        private void startSSDTLoggingToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void stopSSDTLoggingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            bwCopyFiles.RunWorkerAsync("SSDT15");
+        }
+
+        private void toolStripMenuItem4_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            bwCopyFiles.RunWorkerAsync("SSDT");
+        }
+
+        private void collectISSetupLogsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            bwCopyFiles.RunWorkerAsync("IS");
+        }
+
+        private void collectASRSSetupLogsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            bwCopyFiles.RunWorkerAsync("VSIX");
+        }
+
+        private void collectSetupLogsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            bwCopyFiles.RunWorkerAsync("DEASetup");
+        }
+
+        private void collectDEALogsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            bwCopyFiles.RunWorkerAsync("DEA");
+        }
+
+        private void zipEverythingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lblSSDTLog.Text = "1. Upload the zipped file to the case's share space";
+            //DisplaySSDTLog(false);
+            ZipCapture();
+        }
+
+        private void fSQLToolsDiag_Load(object sender, EventArgs e)
+        {
+            if (!IsAdmin()) {
+                MessageBox.Show("SQLToolsDiag needs to run as administrator, in order to have access to run the diagnostics", "SQLToolsDiag", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //WriteEventLog("SQLToolsDiag was not run as administrator", EventLogEntryType.Error);
+                Application.Exit();
+            }
+            //DisplaySSDTLog(false);
+        }
+
+        private void fSQLToolsDiag_Close(object sender, EventArgs e)
+        {
+            if (SSDTCapture) {
+                StopSSDTLogging();
+            }
+            
+        }
+
+        private void btnCopy_Click(object sender, EventArgs e)
+        {
+             Clipboard.SetText(txSSDTLogMan.Text);
+        }
+
+        private void stopLoggingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            startLoggingToolStripMenuItem.Enabled = true;
+            stopLoggingToolStripMenuItem.Enabled = false;
+            resetProgressBar();
+            lblSSDTLog.Text = "1. The command was copied to your clipboard!";
+            lblSSDTLog.Text += Environment.NewLine + "2. Paste the command on an elevated command prompt";
+            StopSSDTLogging();
+            btnCopy_Click(new object(), new EventArgs());
+            
+        }
+
+        private void startLoggingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            startLoggingToolStripMenuItem.Enabled = false;
+            stopLoggingToolStripMenuItem.Enabled = true;
+            lblSSDTLog.Text = "1. The command was copied to your clipboard!";
+            lblSSDTLog.Text += Environment.NewLine + "2. Open a command prompt as administrator"+ 
+                                Environment.NewLine + "and paste the command";
+            lblSSDTLog.Text += Environment.NewLine + "3. Open SSDT";
+            lblSSDTLog.Text += Environment.NewLine + "4. Reproduce your issue";
+            lblSSDTLog.Text += Environment.NewLine + "5. Click on the menu option for 'Stop SSDT Logging'" + 
+                                Environment.NewLine + "once the issue is reproduced";
+            resetProgressBar();
+            StartSSDTLogging();
+            btnCopy_Click(new object(), new EventArgs());
         }
     }
 }
