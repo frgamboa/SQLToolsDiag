@@ -16,7 +16,13 @@ namespace SQLToolsDiag
         readonly string SQLToolsDiagDir = baseDirectory + @"\SQLToolsDiag";
         readonly string SQLToolsDiagZip = baseDirectory + @"\SQLToolsDiag.zip";
         readonly string TempFolder = Environment.CurrentDirectory = Environment.GetEnvironmentVariable("temp");
+        static string AppData = Environment.CurrentDirectory = Environment.GetEnvironmentVariable("AppData");
+        static string LocalAppData = Environment.CurrentDirectory = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        readonly string SSMAPath = AppData + @"\Microsoft SQL Server Migration Assistant";
+        readonly string DMAPath = LocalAppData + @"\DataMigrationAssistant";
+
         private bool SSDTCapture = false;
+
 
         public static bool IsAdmin()
         {
@@ -213,8 +219,10 @@ namespace SQLToolsDiag
                     fileStartsWith = "Database_Experimentation_Assistant_";
                     break;
                 case "DMA":
+                    folder = DMAPath;
                     break;
                 case "SSMA":
+                    folder = SSMAPath;
                     break;
             }
             CopySetupLogs(folder, fileStartsWith);
@@ -451,6 +459,7 @@ namespace SQLToolsDiag
 
         private void fSQLToolsDiag_Load(object sender, EventArgs e)
         {
+            
             if (!IsAdmin()) {
                 MessageBox.Show("SQLToolsDiag needs to run as administrator, in order to have access to run the diagnostics", "SQLToolsDiag", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 //WriteEventLog("SQLToolsDiag was not run as administrator", EventLogEntryType.Error);
@@ -498,6 +507,20 @@ namespace SQLToolsDiag
             resetProgressBar();
             StartSSDTLogging();
             btnCopy_Click(new object(), new EventArgs());
+        }
+
+        private void collectLogsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            bwCopyFiles.RunWorkerAsync("DMA");
+        }
+
+        private void capToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            resetProgressBar();
+            LabelSetupFiles();
+            bwCopyFiles.RunWorkerAsync("SSMA");
         }
     }
 }

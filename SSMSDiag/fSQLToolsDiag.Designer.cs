@@ -61,6 +61,8 @@
             this.collectSSMSInstallLogsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sSDTToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startSSDTLoggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.startLoggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stopLoggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -70,12 +72,14 @@
             this.dEAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.collectSetupLogsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.collectDEALogsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sSMAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.capToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dMAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.collectLogsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zipEverythingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lblSSDTLog = new System.Windows.Forms.Label();
             this.txSSDTLogMan = new System.Windows.Forms.TextBox();
             this.btnCopy = new System.Windows.Forms.Button();
-            this.startLoggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.stopLoggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -353,6 +357,8 @@
             this.sSMSToolStripMenuItem,
             this.sSDTToolStripMenuItem,
             this.dEAToolStripMenuItem,
+            this.sSMAToolStripMenuItem,
+            this.dMAToolStripMenuItem,
             this.zipEverythingToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -406,6 +412,23 @@
             this.startSSDTLoggingToolStripMenuItem.Size = new System.Drawing.Size(251, 26);
             this.startSSDTLoggingToolStripMenuItem.Text = "Logging Command";
             this.startSSDTLoggingToolStripMenuItem.Click += new System.EventHandler(this.startSSDTLoggingToolStripMenuItem_Click);
+            // 
+            // startLoggingToolStripMenuItem
+            // 
+            this.startLoggingToolStripMenuItem.Name = "startLoggingToolStripMenuItem";
+            this.startLoggingToolStripMenuItem.Size = new System.Drawing.Size(182, 26);
+            this.startLoggingToolStripMenuItem.Text = "Start Logging";
+            this.startLoggingToolStripMenuItem.ToolTipText = "Creates the command to start SSDT captures";
+            this.startLoggingToolStripMenuItem.Click += new System.EventHandler(this.startLoggingToolStripMenuItem_Click);
+            // 
+            // stopLoggingToolStripMenuItem
+            // 
+            this.stopLoggingToolStripMenuItem.Enabled = false;
+            this.stopLoggingToolStripMenuItem.Name = "stopLoggingToolStripMenuItem";
+            this.stopLoggingToolStripMenuItem.Size = new System.Drawing.Size(182, 26);
+            this.stopLoggingToolStripMenuItem.Text = "Stop Logging";
+            this.stopLoggingToolStripMenuItem.ToolTipText = "Creates the command to stop SSDT captures";
+            this.stopLoggingToolStripMenuItem.Click += new System.EventHandler(this.stopLoggingToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
@@ -465,7 +488,7 @@
             // collectSetupLogsToolStripMenuItem
             // 
             this.collectSetupLogsToolStripMenuItem.Name = "collectSetupLogsToolStripMenuItem";
-            this.collectSetupLogsToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.collectSetupLogsToolStripMenuItem.Size = new System.Drawing.Size(215, 26);
             this.collectSetupLogsToolStripMenuItem.Text = "Collect Setup Logs";
             this.collectSetupLogsToolStripMenuItem.ToolTipText = "Collects DEA setup logs";
             this.collectSetupLogsToolStripMenuItem.Click += new System.EventHandler(this.collectSetupLogsToolStripMenuItem_Click);
@@ -473,10 +496,40 @@
             // collectDEALogsToolStripMenuItem
             // 
             this.collectDEALogsToolStripMenuItem.Name = "collectDEALogsToolStripMenuItem";
-            this.collectDEALogsToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.collectDEALogsToolStripMenuItem.Size = new System.Drawing.Size(215, 26);
             this.collectDEALogsToolStripMenuItem.Text = "Collect DEA Logs";
             this.collectDEALogsToolStripMenuItem.ToolTipText = "Collects DEA use logs";
             this.collectDEALogsToolStripMenuItem.Click += new System.EventHandler(this.collectDEALogsToolStripMenuItem_Click);
+            // 
+            // sSMAToolStripMenuItem
+            // 
+            this.sSMAToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.capToolStripMenuItem});
+            this.sSMAToolStripMenuItem.Name = "sSMAToolStripMenuItem";
+            this.sSMAToolStripMenuItem.Size = new System.Drawing.Size(62, 24);
+            this.sSMAToolStripMenuItem.Text = "SSMA";
+            // 
+            // capToolStripMenuItem
+            // 
+            this.capToolStripMenuItem.Name = "capToolStripMenuItem";
+            this.capToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.capToolStripMenuItem.Text = "Collect Logs";
+            this.capToolStripMenuItem.Click += new System.EventHandler(this.capToolStripMenuItem_Click);
+            // 
+            // dMAToolStripMenuItem
+            // 
+            this.dMAToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.collectLogsToolStripMenuItem});
+            this.dMAToolStripMenuItem.Name = "dMAToolStripMenuItem";
+            this.dMAToolStripMenuItem.Size = new System.Drawing.Size(57, 24);
+            this.dMAToolStripMenuItem.Text = "DMA";
+            // 
+            // collectLogsToolStripMenuItem
+            // 
+            this.collectLogsToolStripMenuItem.Name = "collectLogsToolStripMenuItem";
+            this.collectLogsToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.collectLogsToolStripMenuItem.Text = "Collect Logs";
+            this.collectLogsToolStripMenuItem.Click += new System.EventHandler(this.collectLogsToolStripMenuItem_Click);
             // 
             // zipEverythingToolStripMenuItem
             // 
@@ -514,23 +567,6 @@
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Visible = false;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
-            // 
-            // startLoggingToolStripMenuItem
-            // 
-            this.startLoggingToolStripMenuItem.Name = "startLoggingToolStripMenuItem";
-            this.startLoggingToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.startLoggingToolStripMenuItem.Text = "Start Logging";
-            this.startLoggingToolStripMenuItem.ToolTipText = "Creates the command to start SSDT captures";
-            this.startLoggingToolStripMenuItem.Click += new System.EventHandler(this.startLoggingToolStripMenuItem_Click);
-            // 
-            // stopLoggingToolStripMenuItem
-            // 
-            this.stopLoggingToolStripMenuItem.Enabled = false;
-            this.stopLoggingToolStripMenuItem.Name = "stopLoggingToolStripMenuItem";
-            this.stopLoggingToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-            this.stopLoggingToolStripMenuItem.Text = "Stop Logging";
-            this.stopLoggingToolStripMenuItem.ToolTipText = "Creates the command to stop SSDT captures";
-            this.stopLoggingToolStripMenuItem.Click += new System.EventHandler(this.stopLoggingToolStripMenuItem_Click);
             // 
             // fSQLToolsDiag
             // 
@@ -618,6 +654,10 @@
         private System.Windows.Forms.Button btnCopy;
         private System.Windows.Forms.ToolStripMenuItem startLoggingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem stopLoggingToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sSMAToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dMAToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem capToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem collectLogsToolStripMenuItem;
     }
 }
 
