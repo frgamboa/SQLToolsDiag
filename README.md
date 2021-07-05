@@ -4,7 +4,7 @@
 The vision is to provide an easy-to-use tool that will put in a centralized location the logs that may be required either to troubleshoot your issue, either by you, or by Microsoft support engineers.
 
 
-Currently, it can help troubleshoot issues on SSMS, SSDT and DEA.
+Currently, it can help troubleshoot issues on SSMS, SSDT, SSMA, DMA and DEA.
 
 # How To Use
 
